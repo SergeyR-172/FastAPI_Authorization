@@ -64,7 +64,7 @@ git clone https://github.com/SergeyR-172/FastAPI_Authorization.git
 cd FastAPI_Authorization
 ```
 
-2. Создайте файл `.env` с настройками:
+2. Создайте файл `.env` с настройками в репозиторий:
 ```bash
 POSTGRES_USER=fastapi_user
 POSTGRES_PASSWORD=fastapi_password
@@ -88,7 +88,7 @@ docker-compose up --build
 
 1. Клонируйте репозиторий:
 ```bash
-git https://github.com/SergeyR-172/FastAPI_Authorization.git
+git clone https://github.com/SergeyR-172/FastAPI_Authorization.git
 cd FastAPI_Authorization
 ```
 
