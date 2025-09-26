@@ -24,11 +24,21 @@ def login(username: str, password: str):
 def get_profile(
     payload: TokenPayload = Depends(security.access_token_required),
     credentials: HTTPAuthorizationCredentials = Security(bearer_scheme)):
+    print(payload.model_dump())
     return {"id": payload.sub, "admin": getattr(payload, "admin", False)}
 
 @app.get("/protected", dependencies=[Depends(security.access_token_required), Security(bearer_scheme)])
 def get_protected():
     return HTMLResponse("Protected page")
+
+def require_admin(payload: TokenPayload = Depends(security.access_token_required)):
+    if not getattr(payload, "admin", False):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return payload
+
+@app.get("/admin-protected", dependencies=[Depends(require_admin), Security(bearer_scheme)])
+def get_adminprotected():
+    return HTMLResponse("Admin protected page")
 
 
 if __name__ == "__main__":
