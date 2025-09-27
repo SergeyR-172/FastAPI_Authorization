@@ -1,9 +1,18 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from routes import user as user_routes
-from auth_config import security, bearer_scheme
+from fastapi.responses import JSONResponse
+from authx.exceptions import MissingTokenError
 import uvicorn
 
 app = FastAPI()
+
+@app.exception_handler(MissingTokenError)
+def missing_token_exception_handler(request: Request, exc: MissingTokenError):
+    return JSONResponse(
+        status_code=401,
+        content={"detail": str(exc)}
+    )
+
 
 app.include_router(user_routes.router)
 
