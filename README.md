@@ -66,12 +66,15 @@ cd FastAPI_Authorization
 
 2. Создайте файл `.env` с настройками в репозиторий:
 ```bash
+# Конфигурация базы данных
 POSTGRES_USER=fastapi_user
 POSTGRES_PASSWORD=fastapi_password
 POSTGRES_DB=fastapi_db
 POSTGRES_HOST=postgres
 POSTGRES_PORT=5432
-DATABASE_URL=postgresql://fastapi_user:fastapi_password@postgres:5432/fastapi_db
+
+# Конфигурация для приложения
+DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
 ```
 
 3. Запустите проект с помощью Docker Compose:
