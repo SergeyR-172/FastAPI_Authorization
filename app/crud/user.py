@@ -1,4 +1,5 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from models.user import User
 from schemas.user import UserCreate
 from passlib.hash import pbkdf2_sha256
@@ -7,10 +8,11 @@ from typing import Optional
 
 hash = pbkdf2_sha256.hash("password")
 
-def get_user_by_username(db: Session, username: str) -> Optional[User]:
-    return db.query(User).filter(User.username == username).first()
+async def get_user_by_username(db: AsyncSession, username: str) -> Optional[User]:
+    result = await db.execute(select(User).filter(User.username == username))
+    return result.scalar_one_or_none()
 
-def create_user(db: Session, user: UserCreate) -> User:
+async def create_user(db: AsyncSession, user: UserCreate) -> User:
     hashed_password = pbkdf2_sha256.hash(user.password)
     db_user = User(
         username=user.username,
@@ -18,6 +20,6 @@ def create_user(db: Session, user: UserCreate) -> User:
         is_admin=False
     )
     db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
+    await db.commit()
+    await db.refresh(db_user)
     return db_user

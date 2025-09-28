@@ -7,7 +7,7 @@ import uvicorn
 app = FastAPI()
 
 @app.exception_handler(MissingTokenError)
-def missing_token_exception_handler(request: Request, exc: MissingTokenError):
+async def missing_token_exception_handler(request: Request, exc: MissingTokenError):
     return JSONResponse(
         status_code=401,
         content={"detail": str(exc)}
