@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, Security
 from fastapi.responses import HTMLResponse
 from fastapi.security import HTTPAuthorizationCredentials
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from database import SessionLocal
+from database import get_async_db
 from schemas.user import UserCreate, UserOut, UserLogin
 from crud.user import create_user, get_user_by_username
 from authx import TokenPayload
@@ -11,14 +11,6 @@ from passlib.hash import pbkdf2_sha256
 from auth_config import security, bearer_scheme
 
 router = APIRouter()
-
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 
 @router.post(
@@ -33,11 +25,11 @@ def get_db():
         400: {"description": "Имя пользователя уже существует"}
     }
 )
-def register(user: UserCreate, db: Session = Depends(get_db)):
-    existing_user = get_user_by_username(db, user.username)
+async def register(user: UserCreate, db: AsyncSession = Depends(get_async_db)):
+    existing_user = await get_user_by_username(db, user.username)
     if existing_user:
         raise HTTPException(status_code=400, detail="Имя пользователя уже занято")
-    return create_user(db, user)
+    return await create_user(db, user)
 
 
 @router.post(
@@ -50,8 +42,8 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
         401: {"description": "Неверное имя пользователя или пароль"}
     }
 )
-def login(user: UserLogin, db: Session = Depends(get_db)):
-    db_user = get_user_by_username(db, user.username)
+async def login(user: UserLogin, db: AsyncSession = Depends(get_async_db)):
+    db_user = await get_user_by_username(db, user.username)
     if not db_user or not pbkdf2_sha256.verify(user.password, db_user.hashed_password):
         raise HTTPException(status_code=401, detail="Неверные учетные данные")
     
@@ -72,7 +64,7 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
         401: {"description": "Неавторизованный доступ"}
     }
 )
-def get_profile(
+async def get_profile(
     payload: TokenPayload = Depends(security.access_token_required),
     credentials: HTTPAuthorizationCredentials = Security(bearer_scheme)
 ):
@@ -93,11 +85,11 @@ def get_profile(
     },
     dependencies=[Depends(security.access_token_required), Security(bearer_scheme)]
 )
-def get_protected():
+async def get_protected():
     return HTMLResponse("Защищённая страница")
 
 
-def require_admin(payload: TokenPayload = Depends(security.access_token_required)):
+async def require_admin(payload: TokenPayload = Depends(security.access_token_required)):
     if not getattr(payload, "admin", False):
         raise HTTPException(status_code=403, detail="Требуются права администратора")
     return payload
@@ -115,5 +107,5 @@ def require_admin(payload: TokenPayload = Depends(security.access_token_required
     },
     dependencies=[Depends(require_admin), Security(bearer_scheme)]
 )
-def get_admin_protected():
+async def get_admin_protected():
     return HTMLResponse("Страница только для администраторов")
