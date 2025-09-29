@@ -1,5 +1,7 @@
 from fastapi import FastAPI, Request
-from routes import user as user_routes
+from routes import auth as auth_routes
+from routes import users as user_routes
+from routes import protected as protected_routes
 from fastapi.responses import JSONResponse
 from authx.exceptions import MissingTokenError
 import uvicorn
@@ -14,7 +16,9 @@ async def missing_token_exception_handler(request: Request, exc: MissingTokenErr
     )
 
 
+app.include_router(auth_routes.router)
 app.include_router(user_routes.router)
+app.include_router(protected_routes.router)
 
 
 if __name__ == "__main__":
